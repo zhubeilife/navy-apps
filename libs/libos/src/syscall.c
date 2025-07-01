@@ -88,8 +88,62 @@ int _write(int fd, void *buf, size_t count) {
   return _syscall_(SYS_write, fd, buf, count);
 }
 
+/*
+brk(2)    System Calls Manual   brk(2)
+
+NAME
+       brk, sbrk - change data segment size
+
+DESCRIPTION
+       brk()  and sbrk() change the location of the program break, which defines the end of the process's data segment (i.e., the
+       program break is the first location after the end of the uninitialized data segment).  Increasing the  program  break  has
+       the effect of allocating memory to the process; decreasing the break deallocates memory.
+
+       brk()  sets  the  end  of  the  data segment to the value specified by addr, when that value is reasonable, the system has
+       enough memory, and the process does not exceed its maximum data size (see setrlimit(2)).
+       sbrk() increments the program's data space by increment bytes.  Calling sbrk() with an increment of 0 can be used to  find
+       the current location of the program break.
+
+RETURN VALUE
+       On success, brk() returns zero.  On error, -1 is returned, and errno is set to ENOMEM.
+
+       On  success,  sbrk() returns the previous program break.  (If the break was increased, then this value is a pointer to the
+       start of the newly allocated memory).  On error, (void *) -1 is returned, and errno is set to ENOMEM.
+*/
+
+/*
+_sbrk()通过记录的方式来对用户程序的program break位置进行管理, 其工作方式如下:
+
+1. program break一开始的位置位于_end
+2. 被调用时, 根据记录的program break位置和参数increment, 计算出新program break
+3. 通过SYS_brk系统调用来让操作系统设置新program break
+4. 若SYS_brk系统调用成功, 该系统调用会返回0, 此时更新之前记录的program break的位置, 并将旧program break的位置作为_sbrk()的返回值返回
+5. 若该系统调用失败, _sbrk()会返回-1
+ */
+
+
+/*
+DESCRIPTION
+       The addresses of these symbols indicate the end of various program segments:
+
+       + etext  This is the first address past the end of the text segment (the program code).
+       + edata  This is the first address past the end of the initialized data segment.
+       + end    This is the first address past the end of the uninitialized data segment (also known as the BSS segment).
+ */
+extern char etext, edata, end; /* The symbols must have some type,
+                                          or "gcc -Wall" complains */
+
 void *_sbrk(intptr_t increment) {
-  return (void *)-1;
+  static intptr_t program_break = (intptr_t)(&end);
+  intptr_t new_program_break = program_break + increment;
+  intptr_t ret = _syscall_(SYS_brk, new_program_break, 0, 0);
+  if (ret == 0) {
+      program_break = new_program_break;
+      return program_break;
+  }
+  else {
+    return (void*)-1;
+  }
 }
 
 int _read(int fd, void *buf, size_t count) {
