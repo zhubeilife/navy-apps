@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <fcntl.h>
 
 static int evtdev = -1;
 static int fbdev = -1;
@@ -18,8 +19,16 @@ uint32_t NDL_GetTicks() {
   return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
+// 读出一条事件信息, 将其写入`buf`中, 最长写入`len`字节
+// 若读出了有效的事件, 函数返回1, 否则返回0
 int NDL_PollEvent(char *buf, int len) {
-  return 0;
+  int count = read(evtdev, buf, len);
+  if (count) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 void NDL_OpenCanvas(int *w, int *h) {
@@ -62,6 +71,9 @@ int NDL_QueryAudio() {
 int NDL_Init(uint32_t flags) {
   if (getenv("NWM_APP")) {
     evtdev = 3;
+  }
+  else {
+    evtdev = open("/dev/events", O_RDONLY);
   }
   return 0;
 }
