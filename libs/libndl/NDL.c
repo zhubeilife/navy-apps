@@ -31,6 +31,8 @@ int NDL_PollEvent(char *buf, int len) {
   }
 }
 
+// 打开一张(*w) X (*h)的画布
+// 如果*w和*h均为0, 则将系统全屏幕作为画布, 并将*w和*h分别设为系统屏幕的大小
 void NDL_OpenCanvas(int *w, int *h) {
   if (getenv("NWM_APP")) {
     int fbctl = 4;
@@ -48,6 +50,9 @@ void NDL_OpenCanvas(int *w, int *h) {
       if (strcmp(buf, "mmap ok") == 0) break;
     }
     close(fbctl);
+  }
+  else {
+    printf("%d %d\n", screen_w, screen_h);
   }
 }
 
@@ -68,13 +73,24 @@ int NDL_QueryAudio() {
   return 0;
 }
 
+int NDL_GetScreenSize() {
+  char buf[64];
+  int dispinfo = open("/proc/dispinfo", O_RDONLY);
+
+  read(dispinfo, buf, 64);
+
+  sscanf(buf, "WIDTH: %d \nHEIGHT: %d", &screen_w, &screen_h);
+}
+
 int NDL_Init(uint32_t flags) {
   if (getenv("NWM_APP")) {
     evtdev = 3;
   }
   else {
     evtdev = open("/dev/events", O_RDONLY);
+    fbdev = open("/dev/fb", O_WRONLY);
   }
+  NDL_GetScreenSize();
   return 0;
 }
 
