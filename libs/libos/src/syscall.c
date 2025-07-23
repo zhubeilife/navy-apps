@@ -118,10 +118,6 @@ _sbrk()通过记录的方式来对用户程序的program break位置进行管理
 3. 通过SYS_brk系统调用来让操作系统设置新program break
 4. 若SYS_brk系统调用成功, 该系统调用会返回0, 此时更新之前记录的program break的位置, 并将旧program break的位置作为_sbrk()的返回值返回
 5. 若该系统调用失败, _sbrk()会返回-1
- */
-
-
-/*
 DESCRIPTION
        The addresses of these symbols indicate the end of various program segments:
 
@@ -138,7 +134,7 @@ void *_sbrk(intptr_t increment) {
   intptr_t ret = _syscall_(SYS_brk, new_program_break, 0, 0);
   if (ret == 0) {
       program_break = new_program_break;
-      return program_break;
+      return (void*)(program_break - increment);
   }
   else {
     return (void*)-1;
