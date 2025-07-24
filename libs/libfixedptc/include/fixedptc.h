@@ -120,6 +120,13 @@ typedef	__uint128_t fixedptud;
 #define FIXEDPT_HALF_PI	fixedpt_rconst(3.14159265358979323846 / 2)
 #define FIXEDPT_E	fixedpt_rconst(2.7182818284590452354)
 
+/*
+	31  30                           8          0
+	+----+---------------------------+----------+
+	|sign|          integer          | fraction |
+	+----+---------------------------+----------+
+ */
+
 /* fixedpt is meant to be usable in environments without floating point support
  * (e.g. microcontrollers, kernels), so we can't use floating point types directly.
  * Putting them only in macros will effectively make them optional. */
@@ -127,35 +134,57 @@ typedef	__uint128_t fixedptud;
 
 /* Multiplies a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_muli(fixedpt A, int B) {
-	return 0;
+	return (fixedpt)((fixedptd)A * (fixedptd)fixedpt_fromint(B) >> FIXEDPT_FBITS);
 }
 
 /* Divides a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_divi(fixedpt A, int B) {
-	return 0;
+	return A / B;;
 }
 
 /* Multiplies two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_mul(fixedpt A, fixedpt B) {
-	return 0;
+	return (fixedpt)( ((fixedptd)A * (fixedptd)B) >> FIXEDPT_FBITS);
 }
-
 
 /* Divides two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_div(fixedpt A, fixedpt B) {
-	return 0;
+	return (((fixedptd)A << FIXEDPT_FBITS) / (fixedptd)B);
 }
 
 static inline fixedpt fixedpt_abs(fixedpt A) {
-	return 0;
+	return A < 0 ? -A : A;
 }
 
+/*
+	DESCRIPTION
+				 These functions return the largest integral value that is not greater than x.
+
+				 For example, floor(0.5) is 0.0, and floor(-0.5) is -1.0.
+
+	RETURN VALUE
+				 These functions return the floor of x.
+
+				 If x is integral, +0, -0, NaN, or an infinity, x itself is returned.
+ */
 static inline fixedpt fixedpt_floor(fixedpt A) {
-	return 0;
+	if (!(FIXEDPT_FMASK & A)) return A;
+	return (A & (~FIXEDPT_FMASK));
 }
+/*
+	DESCRIPTION
+				 These functions return the smallest integral value that is not less than x.
 
+				 For example, ceil(0.5) is 1.0, and ceil(-0.5) is 0.0.
+
+	RETURN VALUE
+				 These functions return the ceiling of x.
+
+				 If x is integral, +0, -0, NaN, or infinite, x itself is returned.
+ */
 static inline fixedpt fixedpt_ceil(fixedpt A) {
-	return 0;
+	if (!(FIXEDPT_FMASK && A)) return A;
+	return fixedpt_add((A & (~FIXEDPT_FMASK)), FIXEDPT_ONE);
 }
 
 /*
