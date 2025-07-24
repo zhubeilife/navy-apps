@@ -170,6 +170,14 @@ static inline fixedpt fixedpt_abs(fixedpt A) {
 static inline fixedpt fixedpt_floor(fixedpt A) {
 	if (!(FIXEDPT_FMASK & A)) return A;
 	return (A & (~FIXEDPT_FMASK));
+
+	// copy from https://htchz.cc/posts/ics-pa/aa5960ea/
+	// 没有小数，直接返回, 这个条件就包含了+0/-0了
+	if (fixedpt_fracpart(A) == 0) return A;
+	// 有小数且正数，直接取整数部分
+	if (A > 0) return A & (~FIXEDPT_FMASK);
+	// 有小数且负数，先取相反数为正数+1，再转回去
+	else return -(((-A) & (~FIXEDPT_FMASK)) + FIXEDPT_ONE);
 }
 /*
 	DESCRIPTION
