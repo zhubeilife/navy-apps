@@ -5,9 +5,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <assert.h>
 
 static int evtdev = -1;
 static int fbdev = -1;
+static int canvas_w = 0, canvas_h = 0;
+static int canvas_x = 0, canvas_y = 0;
 static int screen_w = 0, screen_h = 0;
 
 uint32_t NDL_GetTicks() {
@@ -54,28 +57,35 @@ void NDL_OpenCanvas(int *w, int *h) {
   else {
     printf("%d %d\n", screen_w, screen_h);
     // TODO: should check the input?
-    if (w==0 && h==0) {
+    if (*w == 0 && *h == 0) {
       *w = screen_w;
       *h = screen_h;
     }
-    else if (w==0 || h==0)
-    {
-      printf("!!!!!!should not go here");
-    }
+
+    canvas_w = *w;
+    canvas_h = *h;
+
+    // 这里实现居中
+    canvas_x = (screen_w - canvas_w) / 2;
+    canvas_y = (screen_h - canvas_h) / 2;
+
+    assert(canvas_x + canvas_w <= screen_w);
+    assert(canvas_y + canvas_h <= screen_h);
   }
 }
 
 // 向画布`(x, y)`坐标处绘制`w*h`的矩形图像, 并将该绘制区域同步到屏幕上
 // 图像像素按行优先方式存储在`pixels`中, 每个像素用32位整数以`00RRGGBB`的方式描述颜色
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
-  for (int i = 0; i < h; i++) {
-    int screen_offset = (screen_w * (y + i) + x);
-    lseek(fbdev, screen_offset, SEEK_SET);
+  // i is row_num counter
+  for (int i = 0; i < h && i + y < canvas_h; i++) {
 
-    int pixel_offset = w * i;
-    write(fbdev, &(pixels[pixel_offset]), w);
+    int offset = (canvas_y + y + i) * screen_w + (canvas_x + x);
+    lseek(fbdev, 4 * offset, SEEK_SET);
+
+    w = canvas_w - x > w ? canvas_w - x : w;
+    write(fbdev, pixels + i * w, 4 * w);
   }
-
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
