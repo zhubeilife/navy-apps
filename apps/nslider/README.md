@@ -12,3 +12,7 @@ convert-im6.q16: attempt to perform an operation not allowed by the security pol
 ```
 
 [sf]: https://stackoverflow.com/questions/52998331/imagemagick-security-policy-pdf-blocking-conversion
+
+```bash
+sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
+```

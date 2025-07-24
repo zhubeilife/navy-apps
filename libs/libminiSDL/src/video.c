@@ -1,18 +1,76 @@
 #include <NDL.h>
 #include <sdl-video.h>
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+// 将一张画布中的指定矩形区域复制到另一张画布的指定位置
+// This performs a fast blit from the source surface to the destination surface.
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+
+  int16_t src_x, src_y;
+  uint16_t src_w, src_h;
+  if (srcrect == NULL) {
+    memcpy(dst->pixels, src->pixels, src->format->BytesPerPixel * src->w * src->h);
+    // If srcrect is NULL, the entire surface is copied.
+    src_x = 0;
+    src_x = 0;
+    if (dstrect != NULL) {
+      dstrect->w = src->w;
+      dstrect->h = src->h;
+      dstrect->x = 0;
+      dstrect->y = 0;
+      return;
+    }
+  }
+  else {
+    src_x = srcrect->x;
+    src_y = srcrect->y;
+    src_w = srcrect->w;
+    src_h = srcrect->h;
+  }
+
+  int16_t dst_x, dst_y;
+  if (dstrect == NULL) {
+    //  If dstrect is NULL, then the destination position (upper left corner) is (0, 0).
+    dst_x = dst_y = 0;
+  }
+  else {
+    dst_x = dstrect->x;
+    dst_y = dstrect->y;
+  }
+
+  for (int y = 0; y < src_h; y++) {
+    // copy by line
+    int src_offset = src_y * src->w + src_x;
+    int dst_offset = dst_y * dst->w + dst_x;
+    memcpy(&(dst->pixels[dst_offset]), &(src->pixels[src_offset]), src->format->BytesPerPixel * src_w);
+  }
+  if (dstrect != NULL) {
+    dstrect->w = src_w;
+    dstrect->h = src_h;
+  }
+  return;
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 }
 
+// 将画布中的指定矩形区域同步到屏幕上
+// Makes sure the given area is updated on the given screen.
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  // If 'x', 'y', 'w' and 'h' are all 0, SDL_UpdateRect will update the entire screen.
+  if (x == 0 && y == 0 && w== 0 && h == 0) {
+    x = y = 0;
+    w = s->w;
+    h = s->h;
+    printf("SDL_UpdateRect(%d, %d, %d, %d) use entire screen\n", x, y, w, h);
+  }
+  NDL_DrawRect(s->pixels, x, y, w, h);
 }
 
 // APIs below are already implemented.
