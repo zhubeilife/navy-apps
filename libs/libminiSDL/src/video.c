@@ -12,49 +12,33 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
 
-  int16_t src_x, src_y;
+  int16_t src_x = 0, src_y = 0;
   uint16_t src_w, src_h;
   if (srcrect == NULL) {
-    memcpy(dst->pixels, src->pixels, src->format->BytesPerPixel * src->w * src->h);
     // If srcrect is NULL, the entire surface is copied.
-    src_x = 0;
-    src_y = 0;
-    if (dstrect != NULL) {
-      dstrect->w = src->w;
-      dstrect->h = src->h;
-      dstrect->x = 0;
-      dstrect->y = 0;
-      return;
-    }
+    src_w = src->w; src_h = src->h;
   }
   else {
-    src_x = srcrect->x;
-    src_y = srcrect->y;
-    src_w = srcrect->w;
-    src_h = srcrect->h;
+    src_x = srcrect->x; src_y = srcrect->y;
+    src_w = srcrect->w; src_h = srcrect->h;
   }
 
-  int16_t dst_x, dst_y;
-  if (dstrect == NULL) {
+  int16_t dst_x = 0, dst_y = 0;
+  if (dstrect != NULL) {
     //  If dstrect is NULL, then the destination position (upper left corner) is (0, 0).
-    dst_x = dst_y = 0;
-  }
-  else {
     dst_x = dstrect->x;
     dst_y = dstrect->y;
-  }
-
-  for (int y = 0; y < src_h; y++) {
-    // copy by line
-    int src_offset = src_y * src->w + src_x;
-    int dst_offset = dst_y * dst->w + dst_x;
-    memcpy(&(dst->pixels[dst_offset]), &(src->pixels[src_offset]), src->format->BytesPerPixel * src_w);
-  }
-  if (dstrect != NULL) {
     dstrect->w = src_w;
     dstrect->h = src_h;
   }
-  return;
+
+  for (int y = 0; y < src_h; y++) {
+    int src_offset = (src_y + y) * src->w + src_x;
+    int dst_offset = (dst_y + y) * dst->w + dst_x;
+    memcpy(&dst->pixels[dst_offset * src->format->BytesPerPixel],
+           &src->pixels[src_offset * src->format->BytesPerPixel],
+           src->format->BytesPerPixel * src_w);
+  }
 }
 
 // Perform a fast fill of a rectangle with a specific color.
@@ -64,19 +48,16 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 
   if (dstrect == NULL) {
     dst_x = dst_y = 0;
-    dst_w = dst->w;
-    dst_h = dst->h;
+    dst_w = dst->w; dst_h = dst->h;
   }
   else {
-    dst_x = dstrect->x;
-    dst_y = dstrect->y;
-    dst_w = dstrect->w;
-    dst_h = dstrect->h;
+    dst_x = dstrect->x; dst_y = dstrect->y;
+    dst_w = dstrect->w; dst_h = dstrect->h;
   }
 
   // set by line
   for (int y = 0; y < dst_h; y++) {
-    int offset = dst_y * dst->w + dst_x;
+    int offset = (dst_y + y) * dst->w + dst_x;
     uint32_t * px = (uint32_t *)dst->pixels;
     for (int x = 0; x < dst_w; x++) {
       px[offset + x] = color;
