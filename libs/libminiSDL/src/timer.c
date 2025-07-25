@@ -1,5 +1,6 @@
 #include <NDL.h>
 #include <sdl-timer.h>
+#include <stdint.h>
 #include <stdio.h>
 
 SDL_TimerID SDL_AddTimer(uint32_t interval, SDL_NewTimerCallback callback, void *param) {
@@ -10,8 +11,10 @@ int SDL_RemoveTimer(SDL_TimerID id) {
   return 1;
 }
 
+uint32_t init_ticks = 0;
+// Get the number of milliseconds since SDL library initialization.
 uint32_t SDL_GetTicks() {
-  return 0;
+  return NDL_GetTicks() - init_ticks;
 }
 
 void SDL_Delay(uint32_t ms) {

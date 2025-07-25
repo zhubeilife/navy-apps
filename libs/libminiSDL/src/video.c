@@ -73,7 +73,7 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
     x = y = 0;
     w = s->w;
     h = s->h;
-    printf("SDL_UpdateRect(%d, %d, %d, %d) use entire screen\n", x, y, w, h);
+    // printf("SDL_UpdateRect(%d, %d, %d, %d) use entire screen\n", x, y, w, h);
   }
   NDL_DrawRect(s->pixels, x, y, w, h);
 }
