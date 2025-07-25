@@ -18,7 +18,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     memcpy(dst->pixels, src->pixels, src->format->BytesPerPixel * src->w * src->h);
     // If srcrect is NULL, the entire surface is copied.
     src_x = 0;
-    src_x = 0;
+    src_y = 0;
     if (dstrect != NULL) {
       dstrect->w = src->w;
       dstrect->h = src->h;
@@ -57,7 +57,31 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   return;
 }
 
+// Perform a fast fill of a rectangle with a specific color.
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  int16_t dst_x, dst_y;
+  uint16_t dst_w, dst_h;
+
+  if (dstrect == NULL) {
+    dst_x = dst_y = 0;
+    dst_w = dst->w;
+    dst_h = dst->h;
+  }
+  else {
+    dst_x = dstrect->x;
+    dst_y = dstrect->y;
+    dst_w = dstrect->w;
+    dst_h = dstrect->h;
+  }
+
+  // set by line
+  for (int y = 0; y < dst_h; y++) {
+    int offset = dst_y * dst->w + dst_x;
+    uint32_t * px = (uint32_t *)dst->pixels;
+    for (int x = 0; x < dst_w; x++) {
+      px[offset + x] = color;
+    }
+  }
 }
 
 // 将画布中的指定矩形区域同步到屏幕上
