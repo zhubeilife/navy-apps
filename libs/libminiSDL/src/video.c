@@ -67,7 +67,6 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
       }
     }
     else if (bytes == 1) {
-      // TODO is there input is color or palette num?
       uint8_t * px = (uint8_t *)dst->pixels;
       for (int x = 0; x < dst_w; x++) {
         px[offset + x] = color;
