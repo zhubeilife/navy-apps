@@ -10,6 +10,8 @@ static const char *keyname[] = {
   _KEYS(keyname)
 };
 
+uint8_t key_sates[sizeof(keyname) / sizeof(keyname[0])];
+
 int SDL_PushEvent(SDL_Event *ev) {
   return 0;
 }
@@ -34,15 +36,19 @@ int SDL_PollEvent(SDL_Event *ev) {
       return 0;
     }
 
-    for (int i = 0; i < sizeof(keyname); i++) {
+    int find = 0;
+    for (int i = 0; i < sizeof(keyname) / sizeof(keyname[0]); i++) {
       if (strcmp(key_num, keyname[i]) == 0) {
         ev->key.keysym.sym = i;
-        return 1;
+        key_sates[ev->key.keysym.sym] = (ev->type == SDL_KEYDOWN) ? 1 : 0;
+        find = 1;
+        break;
       }
     }
-
-    printf("unrecognized key num: %s\n", key_num);
-    return 0;
+    if (find == 0) {
+      printf("unrecognized key num: %s\n", key_num);
+    }
+    return find;
   }
   return 0;
 }
@@ -61,6 +67,22 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
   return 0;
 }
 
+/*
+SDL_GetKeyState -- Get a snapshot of the current keyboard state
+ */
 uint8_t* SDL_GetKeyState(int *numkeys) {
-  return NULL;
+  if (numkeys != NULL){
+    *numkeys = sizeof(keyname) / sizeof(keyname[0]);
+  }
+  SDL_Event ev;
+  int ret = SDL_PollEvent(&ev);
+  // for (int i = 0; i < sizeof(keyname) / sizeof(keyname[0]); i++) {
+  //   key_sates[i] = 0;
+  // }
+  // if (ret == 1 &&
+  //   ev.type == SDL_KEYDOWN
+  // ) {
+  //   key_sates[ev.key.keysym.sym] = 1;
+  // }
+  return key_sates;
 }

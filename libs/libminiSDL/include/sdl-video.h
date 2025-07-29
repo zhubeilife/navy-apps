@@ -27,8 +27,8 @@ typedef union {
 } SDL_Color;
 
 typedef struct {
-	int ncolors;
-	SDL_Color *colors;
+	int ncolors;				/**< number of elements in `colors`. */
+	SDL_Color *colors;	/**< an array of colors, `ncolors` long. */
 } SDL_Palette;
 
 typedef struct {

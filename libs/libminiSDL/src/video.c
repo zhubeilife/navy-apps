@@ -55,12 +55,26 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
     dst_w = dstrect->w; dst_h = dstrect->h;
   }
 
+  uint8_t bytes = dst->format->BytesPerPixel;
+
   // set by line
   for (int y = 0; y < dst_h; y++) {
     int offset = (dst_y + y) * dst->w + dst_x;
-    uint32_t * px = (uint32_t *)dst->pixels;
-    for (int x = 0; x < dst_w; x++) {
-      px[offset + x] = color;
+    if (bytes == 4) {
+      uint32_t * px = (uint32_t *)dst->pixels;
+      for (int x = 0; x < dst_w; x++) {
+        px[offset + x] = color;
+      }
+    }
+    else if (bytes == 1) {
+      // TODO is there input is color or palette num?
+      uint8_t * px = (uint8_t *)dst->pixels;
+      for (int x = 0; x < dst_w; x++) {
+        px[offset + x] = color;
+      }
+    }
+    else {
+      assert(1);
     }
   }
 }
@@ -75,7 +89,25 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
     h = s->h;
     // printf("SDL_UpdateRect(%d, %d, %d, %d) use entire screen\n", x, y, w, h);
   }
-  NDL_DrawRect(s->pixels, x, y, w, h);
+  if (s->format->BytesPerPixel == 4) {
+    NDL_DrawRect(s->pixels, x, y, w, h);
+  }
+  else if (s->format->BytesPerPixel == 1) {
+    uint32_t *color_pixels = malloc(w * h * 4);
+    uint8_t *src = (uint8_t *)s->pixels;
+    for (int i = 0; i < h; i++) {
+      for (int j = 0; j < w; j++) {
+        // SDL_Color的结构体成员是r, g, b, a排序的，而我们要的32位pixels的格式为AARRGGBB
+        SDL_Color color = s->format->palette->colors[src[i * w + j]];
+        color_pixels[i * w + j] = color.a << 24 | color.r << 16 | color.g << 8 | color.b;
+      }
+    }
+    NDL_DrawRect(color_pixels, x, y, w, h);
+    free(color_pixels);
+  }
+  else {
+    assert(1);
+  }
 }
 
 // APIs below are already implemented.
