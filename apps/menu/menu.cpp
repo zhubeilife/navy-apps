@@ -26,6 +26,7 @@ struct MenuItem {
   const char *name, *bin, *arg1;
 } items[] = {
   {"NJU Terminal", "/bin/nterm", NULL},
+  {"menu", "/bin/menu", NULL},
   {"NSlider", "/bin/nslider", NULL},
   {"FCEUX (Super Mario Bros)", "/bin/fceux", "/share/games/nes/mario.nes"},
   {"FCEUX (100 in 1)", "/bin/fceux", "/share/games/nes/100in1.nes"},
