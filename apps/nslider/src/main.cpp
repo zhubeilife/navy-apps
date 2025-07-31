@@ -2,6 +2,7 @@
 #include <SDL_bmp.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #define W 400
 #define H 300
@@ -57,6 +58,7 @@ int main() {
 
     if (e.type == SDL_KEYDOWN) {
       switch(e.key.keysym.sym) {
+        case SDLK_ESCAPE: exit(0); break;
         case SDLK_0: rep = rep * 10 + 0; break;
         case SDLK_1: rep = rep * 10 + 1; break;
         case SDLK_2: rep = rep * 10 + 2; break;

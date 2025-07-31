@@ -22,7 +22,47 @@ static void sh_prompt() {
   sh_printf("sh> ");
 }
 
+#define CMD_ECHO "echo"
+// steal from https://htchz.cc/posts/ics-pa/aa5960ea/ and https://www.cnblogs.com/silly2023/p/17947957
 static void sh_handle_cmd(const char *cmd) {
+  assert(cmd);
+
+  char *cpy = (char *)malloc(strlen(cmd) + 1);
+  strcpy(cpy, cmd);
+  // remove last return
+  size_t len = strlen(cpy);
+  if (len > 0 && cpy[len-1] == '\n') {
+    cpy[len-1] = '\0';
+  }
+
+  // extract the first token as the command
+  char *cmd_ = strtok(cpy, " ");
+  if (cmd_ == NULL) {
+    free(cpy);
+    return;
+  }
+
+  // lite echo
+  if (strncmp(cmd_, CMD_ECHO, strlen(CMD_ECHO)) == 0) {
+    sh_printf("%s\n", cmd_ + strlen(cmd_) + 1);
+    free(cpy);
+    return;
+  }
+
+  // execve
+  char *argv[20];
+  char *arg;
+  int argc = 0;
+  while ((arg = strtok(NULL, " "))) {
+    argv[argc++] = arg;
+  }
+  argv[argc] = NULL;
+
+  setenv("PATH", "/bin", 0);
+  execvp(cmd_, argv);
+
+  perror("execve");
+  free(cpy);
 }
 
 void builtin_sh_run() {
